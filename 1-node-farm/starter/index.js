@@ -1,5 +1,8 @@
 const fs = require('fs');
 const http = require('http');
+const url = require('url');
+
+
 /////////////////////////////////////
 //
 //
@@ -41,11 +44,53 @@ console.log('will read file!');
 ///////////////////////////////////
 // SERVER
 
+const data = fs.readFileSync(`${__dirname}/dev-data/data.json`, 'utf-8');
+console.log('this only runs once');
+const dataObj = JSON.parse(data);
+
+const templateOverview = fs.readFileSync(`${__dirname}/templates/template-overview.html`, 'utf-8');
+const templateProduct = fs.readFileSync(`${__dirname}/templates/template-card.html`, 'utf-8');
+const templateCard = fs.readFileSync(`${__dirname}/templates/template-product.html`, 'utf-8');
+
 const server = http.createServer((req, res) => {
     //console.log(req);
-    res.end('Hello from the server!!');
+    const pathName = req.url;
+
+    // Overview page
+    if (pathName === '/' || pathName === '/overview'){
+
+
+
+        res.writeHead(200, {
+            'Content-type': 'text/html'
+        });
+
+        res.end(templateOverview);
+
+    
+    //product page
+    } else if (pathName === '/product') {
+        res.end('this is the PRODUCT');
+
+
+    // API
+    } else if (pathName === '/api'){
+
+        
+        res.writeHead(200, {'Content-type': 'application/json'})
+        res.end(data);
+
+
+    //NOT FOUND
+    } else {
+        res.writeHead(404, {
+            'Content-type': 'text/html',
+            'my-own-header': 'hello-world'
+        });
+        res.end('<h1>Page not found!</h1>');
+    }
 });
 
 server.listen(8001, '127.0.0.1', () => {
     console.log('listening to requests on port 8001');
-})
+});
