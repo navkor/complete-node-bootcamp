@@ -1,14 +1,11 @@
 {
   "name": "starter",
   "version": "1.0.0",
-  "description": "Learning NodeJS",
+  "description": "how node works starter app",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Michael Brooks",
-  "license": "ISC",
-  "dependencies": {
-    "slugify": "^1.6.5"
-  }
+  "license": "ISC"
 }
