@@ -1,118 +1,26 @@
 const express = require('express');
 const fs = require('fs');
+const morgan = require('morgan');
+
+const tourRouter = require('./routes/tourRoutes');
+const userRouter = require('./routes/userRoutes');
 
 const app = express();
 const port = process.env.PORT || 8001;
 
+app.use(morgan('dev'));
+
 //middleware to add data to the body of the request
 app.use(express.json());
 
-const tours = JSON.parse(
-  fs.readFileSync(`${__dirname}/dev-data/data/tours-simple.json`)
-);
+app.use(express.urlencoded({ extended: true }));
+app.use((req, res, next) => {
+  req.requestTime = new Date().toISOString();
+  next();
+});
 
-const getAllTours = (req, res) => {
-  res.status(200).json({
-    status: 'success',
-    results: tours.length,
-    data: tours,
-  });
-};
+// route handlers
 
-const getTour = (req, res) => {
-  const id = req.params.id * 1;
-
-  if (id > tours.length) {
-    res.status(404).json({
-      status: 'failed',
-      message: 'No such tour',
-    });
-  } else {
-    const tour = tours.find((el) => el.id === id);
-    if (tour) {
-      res.status(200).json({
-        status: 'success',
-        data: { tour: tour },
-      });
-    } else {
-      res.status(404).json({
-        status: 'failure',
-        message: 'No such tour',
-      });
-    }
-  }
-};
-
-const createTour = (req, res) => {
-  // adding a new tour to the database
-  //console.log(req.body);
-  const newId = tours[tours.length - 1].id + 1;
-  const newTour = Object.assign({ id: newId }, req.body);
-
-  tours.push(newTour);
-
-  fs.writeFile(
-    `${__dirname}/dev-data/data/tours-simple.json`,
-    JSON.stringify(tours),
-    (err) => {
-      if (err) {
-        console.log(err);
-      }
-      res.status(201).json({
-        status: 'success',
-        data: { tour: newTour },
-      });
-    }
-  );
-};
-
-const updateTour = (req, res) => {
-  const id = req.params.id * 1;
-  const tour = tours.find((el) => el.id === id);
-  if (id > tours.length) {
-    res.status(404).json({
-      status: 'failed',
-      message: 'No such tour',
-    });
-  } else {
-    const tour = tours.find((el) => el.id === id);
-    if (tour) {
-      res.status(200).json({
-        status: 'success',
-        data: { tour: '<Updated tour here>' },
-      });
-    } else {
-      res.status(404).json({
-        status: 'failure',
-        message: 'No such tour',
-      });
-    }
-  }
-};
-
-const deleteTour = (req, res) => {
-  const id = req.params.id * 1;
-  const tour = tours.find((el) => el.id === id);
-  if (id > tours.length) {
-    res.status(404).json({
-      status: 'failed',
-      message: 'No such tour',
-    });
-  } else {
-    const tour = tours.find((el) => el.id === id);
-    if (tour) {
-      res.status(204).json({
-        status: 'success',
-        data: null,
-      });
-    } else {
-      res.status(404).json({
-        status: 'failure',
-        message: 'No such tour',
-      });
-    }
-  }
-};
 
 
 // app.get('/api/v1/tours/:id', getTour);
@@ -121,10 +29,11 @@ const deleteTour = (req, res) => {
 
 // app.delete('/api/v1/tours/:id', deleteTour);
 
+// routes
+app.use('/api/v1/tours', tourRouter);
 
-app.route('/api/v1/tours').get(getAllTours).post(createTour);
-app.route('/api/v1/tours/:id').get(getTour).patch(updateTour).delete(deleteTour);
-
+app.use('/api/v1/users', userRouter);
+//server
 app.listen(port, () => {
   console.log(`App listening on port ${port}!`);
 });
