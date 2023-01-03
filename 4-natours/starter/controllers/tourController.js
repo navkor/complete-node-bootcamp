@@ -3,29 +3,6 @@ const APIFeatures = require('../utils/apiFeatures');
 const AppError = require('../utils/appError');
 const catchAsync = require('../utils/catchAsync');
 
-// exports.checkId = (req, res, next, val) => {
-//   console.log(`Tour id is ${val}`);
-//   const { id } = req.params.id;
-//   if (id > tours.length) {
-//     return res.status(404).json({
-//       status: 'failed',
-//       message: 'No such tour',
-//     });
-//   }
-//   next();
-// };
-
-// exports.checkBody = (req, res, next) => {
-//   const { name, price } = req.body;
-//   if (!name || !price) {
-//     return res.status(400).json({
-//       status: 'failed',
-//       message: 'Both name and price are required',
-//     });
-//   }
-//   next();
-// };
-
 exports.aliasTopTours = (req, res, next) => {
   // this is for prewriting the query string
   req.query.limit = '5';

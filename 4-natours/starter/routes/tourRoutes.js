@@ -3,6 +3,7 @@ const express = require('express');
 const router = express.Router();
 
 const tourController = require('../controllers/tourController');
+const authController = require('../controllers/authController');
 
 //this is a route alias
 //will use a middleware
@@ -15,7 +16,7 @@ router.route('/monthly-plan/:year').get(tourController.getMonthlyPlan);
 
 router
   .route('/')
-  .get(tourController.getAllTours)
+  .get(authController.protect, tourController.getAllTours)
   .post(tourController.createTour);
 router
   .route('/:id')

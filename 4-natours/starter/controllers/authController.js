@@ -1,3 +1,4 @@
+const { promisify } = require('util');
 const jwt = require('jsonwebtoken');
 const User = require('../models/userModel');
 const catchAsync = require('../utils/catchAsync');
@@ -14,6 +15,8 @@ exports.signup = catchAsync(async (req, res, next) => {
     email: req.body.email,
     password: req.body.password,
     passwordConfirm: req.body.passwordConfirm,
+    photo: req.body.photo,
+    passwordChangedAt: req.body.passwordChangedAt,
   });
 
   // this is just for testing purposes. in real applications, do not log in when registering an account!!
@@ -45,4 +48,48 @@ exports.login = catchAsync(async (req, res, next) => {
     status: 'success',
     token,
   });
+});
+
+exports.protect = catchAsync(async (req, res, next) => {
+  let token;
+  // 1) get token and check if it's there
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith('Bearer')
+  ) {
+    token = req.headers.authorization.split(' ')[1];
+  }
+
+  if (!token) {
+    return next(
+      new AppError('You are not logged in. Please log in to get access', 401)
+    );
+  }
+  // 2) validate the token
+  const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+
+  // 3) check if user still exists
+  const freshUser = await User.findById(decoded.id);
+
+  if (!freshUser) {
+    console.log(
+      'User attempted to login with a token belonging to a user that does not exist',
+      decoded
+    );
+    return next(
+      new AppError(
+        'You are not authenticated. Please log in to get access',
+        401
+      )
+    );
+  }
+  // 4) check if user changed password since token was issued
+  if (freshUser.changedPasswordAfter(decoded.iat)) {
+    return next(
+      new AppError('Authentication error. Please log in and try again', 401)
+    );
+  }
+
+  req.user = freshUser;
+  next();
 });
