@@ -17,6 +17,7 @@ exports.signup = catchAsync(async (req, res, next) => {
     passwordConfirm: req.body.passwordConfirm,
     photo: req.body.photo,
     passwordChangedAt: req.body.passwordChangedAt,
+    role: req.body.role,
   });
 
   // this is just for testing purposes. in real applications, do not log in when registering an account!!
@@ -93,3 +94,34 @@ exports.protect = catchAsync(async (req, res, next) => {
   req.user = freshUser;
   next();
 });
+
+// this demonstrates how to pass parameters when you're trying to wrap in middleware
+exports.restrictTo =
+  (...roles) =>
+  (req, res, next) => {
+    if (!roles.includes(req.user.role)) {
+      return next(
+        new AppError('You do not have permission to perform this action.', 403)
+      );
+    }
+    next();
+  };
+
+exports.forgotPassword = catchAsync(async (req, res, next) => {
+  console.log('entered forgot password');
+  // 1) get user based on POSTed email
+  const user = await User.findOne({ email: req.body.email });
+  console.log({ user });
+  if (!user) {
+    return next(new AppError('There is no user with that email address.', 404));
+  }
+
+  // 2) generate the random token
+  const resetToken = user.createPasswordResetToken();
+  await user.save({ validateBeforeSave: false });
+  // 3) send it back as an email
+
+  next();
+});
+
+exports.resetPassword = (req, res, next) => {};
